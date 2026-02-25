@@ -1,0 +1,9 @@
+AllCops:
+  NewCops: enable
+  TargetRubyVersion: 2.7
+
+plugins:
+  - rubocop-rake
+  - rubocop-rspec
+Metrics/MethodLength:
+  length: 100

@@ -6,6 +6,8 @@
 
 require 'optparse'
 
+# CLI wrapper for running RSpec with AI formatter
+# Handles option parsing and environment setup
 class RspecAiCli
   def initialize(args)
     @args = args
