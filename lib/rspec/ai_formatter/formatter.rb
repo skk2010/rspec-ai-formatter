@@ -26,7 +26,6 @@ module RSpec
         @pending_count = 0
         @passed_count = 0
         @test_index = []
-        @github_actions = ENV['GITHUB_ACTIONS'] == 'true' && output.respond_to?(:tty?) && output.tty?
         @deduplicate = ENV['RSPEC_AI_DEDUP'] == '1'
         @minimal = ENV['RSPEC_AI_FULL'] != '1'
         @error_signatures = {}
@@ -105,8 +104,6 @@ module RSpec
             ts: timestamp
           )
         end
-
-        emit_github_error(ex, notification) if @github_actions
       end
 
       def example_pending(notification)
@@ -127,8 +124,6 @@ module RSpec
             ts: timestamp
           )
         end
-
-        emit_github_warning(ex, reason) if @github_actions
       end
 
       def dump_summary(notification)
@@ -203,33 +198,6 @@ module RSpec
         file = meta[:file_path].to_s.sub(/^\.\//, '')
         line = meta[:line_number]
         "#{file}:#{line}"
-      end
-
-      def emit_github_error(example, notification)
-        exception = notification.exception
-        return unless exception
-
-        file = example.metadata[:file_path]
-        line = example.metadata[:line_number]
-        
-        # Try to find exact line from backtrace
-        if exception.backtrace
-          trace_line = exception.backtrace.find { |l| l.include?(file) }
-          if trace_line
-            parts = trace_line.split(':')
-            line = parts[1] if parts[1]&.match?(/^\d+$/)
-          end
-        end
-
-        msg = truncate(error_message(exception), 200)
-        $stderr.puts("::error file=#{file},line=#{line}::#{msg}")
-      end
-
-      def emit_github_warning(example, reason)
-        file = example.metadata[:file_path]
-        line = example.metadata[:line_number]
-        msg = "Skipped: #{truncate(reason || 'pending', 200)}"
-        $stderr.puts("::warning file=#{file},line=#{line}::#{msg}")
       end
 
       def setup_log_directory
