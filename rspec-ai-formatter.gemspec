@@ -15,7 +15,7 @@ Gem::Specification.new do |spec|
 
   spec.homepage = 'https://github.com/sciencejet/rspec-ai-formatter'
   spec.license = 'MIT'
-  spec.required_ruby_version = '>= 2.7.0'
+  spec.required_ruby_version = '>= 3.0.0'
 
   spec.metadata['allowed_push_host'] = 'https://rubygems.org'
   spec.metadata['rubygems_mfa_required'] = 'true'
@@ -27,12 +27,9 @@ Gem::Specification.new do |spec|
   ]
 
   spec.bindir = 'bin'
-  spec.executables = ['rspec-ai', 'rspec-ai-merge']
+  spec.executables = %w[rspec-ai rspec-ai-merge]
   spec.require_paths = ['lib']
+  spec.autorequire = 'rspec_ai_formatter'
 
   spec.add_dependency 'rspec-core', '>= 3.10'
-
-  spec.add_development_dependency 'rspec', '~> 3.13'
-  spec.add_development_dependency 'rubocop', '~> 1.60'
-  spec.add_development_dependency 'simplecov', '~> 0.22'
 end

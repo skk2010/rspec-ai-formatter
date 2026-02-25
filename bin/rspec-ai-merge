@@ -7,6 +7,8 @@
 require 'json'
 require 'optparse'
 
+# Merges multiple RSpec AI formatter JSONL outputs
+# Supports deduplication, sorting, and summary generation
 class RspecAiMerger
   def initialize(args)
     @files = []
@@ -19,7 +21,7 @@ class RspecAiMerger
 
   def run
     if @files.empty?
-      puts "No input files specified. Use --help for usage."
+      puts 'No input files specified. Use --help for usage.'
       exit 1
     end
 
@@ -41,11 +43,11 @@ class RspecAiMerger
 
   def parse_options!(args)
     parser = OptionParser.new do |opts|
-      opts.banner = "Usage: rspec-ai-merge [options] file1.jsonl file2.jsonl ..."
-      opts.separator ""
-      opts.separator "Merge multiple RSpec AI formatter outputs from parallel test runs"
-      opts.separator ""
-      opts.separator "Options:"
+      opts.banner = 'Usage: rspec-ai-merge [options] file1.jsonl file2.jsonl ...'
+      opts.separator ''
+      opts.separator 'Merge multiple RSpec AI formatter outputs from parallel test runs'
+      opts.separator ''
+      opts.separator 'Options:'
 
       opts.on('-o', '--output FILE', 'Output file (default: stdout)') do |f|
         @output = File.open(f, 'w')
@@ -186,26 +188,26 @@ class RspecAiMerger
   def write_summary(events)
     # Calculate totals from all 'done' events
     dones = events.select { |e| e['t'] == 'done' }
-    
-    if dones.any?
-      total_passed = dones.sum { |d| d['passed'] || 0 }
-      total_failed = dones.sum { |d| d['failed'] || 0 }
-      total_skipped = dones.sum { |d| d['skipped'] || 0 }
-      total_tests = dones.sum { |d| d['total'] || 0 }
-      total_time = dones.sum { |d| d['time'] || 0 }
 
-      # Remove original done events and add merged one
-      @output.puts({
-        't' => 'done',
-        'passed' => total_passed,
-        'failed' => total_failed,
-        'skipped' => total_skipped,
-        'total' => total_tests,
-        'time' => total_time,
-        'merged_from' => @files.length,
-        'ts' => Time.now.utc.iso8601(3)
-      }.to_json)
-    end
+    return unless dones.any?
+
+    total_passed = dones.sum { |d| d['passed'] || 0 }
+    total_failed = dones.sum { |d| d['failed'] || 0 }
+    total_skipped = dones.sum { |d| d['skipped'] || 0 }
+    total_tests = dones.sum { |d| d['total'] || 0 }
+    total_time = dones.sum { |d| d['time'] || 0 }
+
+    # Remove original done events and add merged one
+    @output.puts({
+      't' => 'done',
+      'passed' => total_passed,
+      'failed' => total_failed,
+      'skipped' => total_skipped,
+      'total' => total_tests,
+      'time' => total_time,
+      'merged_from' => @files.length,
+      'ts' => Time.now.utc.iso8601(3)
+    }.to_json)
   end
 end
 

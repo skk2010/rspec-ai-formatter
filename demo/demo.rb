@@ -40,9 +40,9 @@ Dir.mktmpdir do |dir|
   log_dir = File.join(dir, 'logs')
   FileUtils.mkdir_p(log_dir)
 
-  puts "=" * 80
-  puts "AI FORMATTER OUTPUT:"
-  puts "=" * 80
+  puts '=' * 80
+  puts 'AI FORMATTER OUTPUT:'
+  puts '=' * 80
   puts
 
   output = StringIO.new
@@ -68,7 +68,8 @@ Dir.mktmpdir do |dir|
       when :passed
         formatter.example_passed(double(example: example))
       when :failed
-        formatter.example_failed(double(example: example, exception: example.execution_result.exception, formatted_backtrace: []))
+        formatter.example_failed(double(example: example, exception: example.execution_result.exception,
+                                        formatted_backtrace: []))
       when :pending
         formatter.example_pending(double(example: example))
       end
@@ -81,23 +82,23 @@ Dir.mktmpdir do |dir|
   puts output.read
 
   puts
-  puts "=" * 80
-  puts "FAILURE LOG:"
-  puts "=" * 80
+  puts '=' * 80
+  puts 'FAILURE LOG:'
+  puts '=' * 80
   puts
 
   log_files = Dir.glob(File.join(log_dir, '*.log'))
   if log_files.any?
     puts File.read(log_files.first)
   else
-    puts "No failure logs generated"
+    puts 'No failure logs generated'
   end
 end
 
 # Helper classes
 class Reporter < RSpec::Core::Reporter
   def initialize(config)
-    super(config)
+    super
   end
 end
 
