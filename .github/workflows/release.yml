@@ -21,6 +21,7 @@ jobs:
       with:
         ruby-version: '3.3'
         bundler-cache: true
+        cache-version: 1
 
     - name: Run tests
       run: bundle exec rspec
@@ -31,7 +32,7 @@ jobs:
     - name: Publish to RubyGems
       uses: rubygems/release-gem@v1
       with:
-        api-key: ${{ secrets.RUBYGEMS_API_KEY }}
+        await-release: true
 
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v2
