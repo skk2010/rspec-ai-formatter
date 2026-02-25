@@ -7,6 +7,7 @@ require_relative 'log_writer'
 require_relative 'error_formatter'
 require_relative 'location_helper'
 require_relative 'output_helper'
+require_relative 'screenshot_capture'
 
 module RSpec
   module AiFormatter
@@ -17,6 +18,7 @@ module RSpec
       include ErrorFormatter
       include LocationHelper
       include OutputHelper
+      include ScreenshotCapture
 
       RSpec::Core::Formatters.register self,
                                        :start,
@@ -75,13 +77,17 @@ module RSpec
         exception = notification.exception
         log_path = write_failure_log(ex, notification)
 
+        # Capture Capybara screenshot if available
+        screenshot_path = capture_screenshot(ex)
+        screenshot_log_path = copy_screenshot_to_logs(ex, screenshot_path) if screenshot_path
+
         # Calculate signature for deduplication
         sig = error_signature(exception) if @deduplicate || ENV['RSPEC_AI_SIGNATURES'] == '1'
 
         if @deduplicate && sig && @error_signatures.key?(sig)
           handle_duplicate_error(ex, sig)
         else
-          handle_first_error(ex, notification, log_path, sig)
+          handle_first_error(ex, notification, log_path, sig, screenshot_log_path)
         end
       end
 
@@ -130,7 +136,7 @@ module RSpec
         )
       end
 
-      def handle_first_error(example, notification, log_path, sig)
+      def handle_first_error(example, notification, log_path, sig, screenshot_path = nil)
         # First occurrence of this error
         if @deduplicate && sig
           @error_signatures[sig] = {
@@ -148,7 +154,7 @@ module RSpec
           n: short_name(example),
           s: 'fail',
           time: execution_time_ms(example),
-          e: error_details(example, notification, log_path, sig),
+          e: error_details(example, notification, log_path, sig, screenshot_path),
           ts: timestamp
         )
       end

@@ -4,7 +4,7 @@ module RSpec
   module AiFormatter
     # Formats error details for output
     module ErrorFormatter
-      def error_details(example, notification, log_path, sig = nil)
+      def error_details(example, notification, log_path, sig = nil, screenshot_path = nil)
         exception = notification.exception
         return {} unless exception
 
@@ -15,6 +15,7 @@ module RSpec
         }
 
         details[:log] = log_path if log_path && @log_dir != File::NULL
+        details[:screenshot] = screenshot_path if screenshot_path
         details[:sig] = sig if sig
 
         # Add diff for expectation failures
