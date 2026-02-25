@@ -4,7 +4,7 @@ require_relative 'ai_formatter/formatter'
 
 module RSpec
   module AiFormatter
-    VERSION = '0.1.0'
+    VERSION = '0.2.0'
 
     class Error < StandardError; end
   end
