@@ -2,6 +2,8 @@
 
 require 'rspec/ai_formatter'
 
+# rubocop:disable RSpec/VerifiedDoubles
+# RSpec internal classes have dynamic methods defined at runtime
 RSpec.describe RSpec::AiFormatter::Formatter do
   let(:output) { StringIO.new }
   let(:formatter) { described_class.new(output) }
@@ -27,10 +29,7 @@ RSpec.describe RSpec::AiFormatter::Formatter do
 
   describe '#start' do
     let(:notification) do
-      double(
-        'notification',
-        count: 5
-      )
+      double('notification', count: 5)
     end
 
     it 'emits start event' do
@@ -76,7 +75,7 @@ RSpec.describe RSpec::AiFormatter::Formatter do
       # Pass events only emitted in full mode
       ENV['RSPEC_AI_FULL'] = '1'
       formatter = described_class.new(output)
-      formatter.start(double(count: 1))
+      formatter.start(double('start', count: 1))
       formatter.example_passed(notification)
 
       output.rewind
@@ -135,7 +134,7 @@ RSpec.describe RSpec::AiFormatter::Formatter do
 
     it 'emits test event with fail status' do
       formatter = described_class.new(output, log_dir: log_dir)
-      formatter.start(double(count: 1))
+      formatter.start(double('start', count: 1))
       formatter.example_failed(notification)
 
       output.rewind
@@ -150,7 +149,7 @@ RSpec.describe RSpec::AiFormatter::Formatter do
 
     it 'creates failure log file' do
       formatter = described_class.new(output, log_dir: log_dir)
-      formatter.start(double(count: 1))
+      formatter.start(double('start', count: 1))
       formatter.example_failed(notification)
 
       log_file = File.join(log_dir, 'test_spec_15.log')
@@ -170,7 +169,7 @@ RSpec.describe RSpec::AiFormatter::Formatter do
     end
 
     before do
-      formatter.start(double(count: 3))
+      formatter.start(double('start', count: 3))
     end
 
     it 'emits done event with counts' do
@@ -220,7 +219,7 @@ RSpec.describe RSpec::AiFormatter::Formatter do
       # Pass events only emitted in full mode
       ENV['RSPEC_AI_FULL'] = '1'
       formatter = described_class.new(output)
-      formatter.start(double(count: 1))
+      formatter.start(double('start', count: 1))
       notification = double('notification', example: example)
       formatter.example_passed(notification)
 
@@ -297,7 +296,7 @@ RSpec.describe RSpec::AiFormatter::Formatter do
     end
 
     around do |example|
-      old_env = ENV['RSPEC_AI_DEDUP']
+      old_env = ENV.fetch('RSPEC_AI_DEDUP', nil)
       example.run
       ENV['RSPEC_AI_DEDUP'] = old_env
     end
@@ -305,11 +304,11 @@ RSpec.describe RSpec::AiFormatter::Formatter do
     it 'deduplicates identical errors when enabled' do
       ENV['RSPEC_AI_DEDUP'] = '1'
       formatter = described_class.new(output, log_dir: log_dir)
-      formatter.start(double(count: 2))
+      formatter.start(double('start', count: 2))
 
       # First failure - full test event
       formatter.example_failed(notification1)
-      
+
       # Second failure - should be dedup
       formatter.example_failed(notification2)
 
@@ -331,7 +330,7 @@ RSpec.describe RSpec::AiFormatter::Formatter do
     it 'does not deduplicate when disabled' do
       ENV['RSPEC_AI_DEDUP'] = nil
       formatter = described_class.new(output, log_dir: log_dir)
-      formatter.start(double(count: 2))
+      formatter.start(double('start', count: 2))
 
       formatter.example_failed(notification1)
       formatter.example_failed(notification2)
@@ -340,7 +339,7 @@ RSpec.describe RSpec::AiFormatter::Formatter do
       lines = output.read.lines
 
       # Skip start event
-      test_lines = lines[1..-1]
+      test_lines = lines[1..]
       expect(test_lines.length).to eq(2)
       test_lines.each do |line|
         json = JSON.parse(line)
@@ -350,13 +349,13 @@ RSpec.describe RSpec::AiFormatter::Formatter do
 
     it 'emits dedup_summary for duplicates' do
       ENV['RSPEC_AI_DEDUP'] = '1'
-      ENV['RSPEC_AI_FULL'] = '1'  # Need full mode for examples array
+      ENV['RSPEC_AI_FULL'] = '1' # Need full mode for examples array
       formatter = described_class.new(output, log_dir: log_dir)
-      formatter.start(double(count: 2))
+      formatter.start(double('start', count: 2))
 
       formatter.example_failed(notification1)
       formatter.example_failed(notification2)
-      formatter.dump_summary(double(example_count: 2, failure_count: 2, pending_count: 0))
+      formatter.dump_summary(double('summary', example_count: 2, failure_count: 2, pending_count: 0))
 
       output.rewind
       lines = output.read.lines
@@ -371,3 +370,4 @@ RSpec.describe RSpec::AiFormatter::Formatter do
     end
   end
 end
+# rubocop:enable RSpec/VerifiedDoubles

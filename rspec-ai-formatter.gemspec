@@ -27,7 +27,7 @@ Gem::Specification.new do |spec|
   ]
 
   spec.bindir = 'bin'
-  spec.executables = ['rspec-ai', 'rspec-ai-merge']
+  spec.executables = %w[rspec-ai rspec-ai-merge]
   spec.require_paths = ['lib']
 
   spec.add_dependency 'rspec-core', '>= 3.10'

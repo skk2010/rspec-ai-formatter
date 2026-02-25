@@ -26,9 +26,9 @@ class RspecAiCli
 
   def parse_options!
     parser = OptionParser.new do |opts|
-      opts.banner = "Usage: rspec-ai [options] [rspec options]"
-      opts.separator ""
-      opts.separator "AI Formatter options:"
+      opts.banner = 'Usage: rspec-ai [options] [rspec options]'
+      opts.separator ''
+      opts.separator 'AI Formatter options:'
 
       opts.on('--ai-logs-dir DIR', 'Directory for failure logs') do |dir|
         @log_dir = dir
@@ -45,15 +45,15 @@ class RspecAiCli
       opts.on('-h', '--help', 'Show this help') do
         puts opts
         puts
-        puts "Environment variables:"
-        puts "  RSPEC_AI_LOGS      - Default log directory"
-        puts "  RSPEC_AI_CLEAN     - Clean logs before run (1/0)"
-        puts "  RSPEC_AI_SIGNATURES - Enable error signatures (1/0)"
+        puts 'Environment variables:'
+        puts '  RSPEC_AI_LOGS      - Default log directory'
+        puts '  RSPEC_AI_CLEAN     - Clean logs before run (1/0)'
+        puts '  RSPEC_AI_SIGNATURES - Enable error signatures (1/0)'
         exit
       end
 
-      opts.separator ""
-      opts.separator "All other options are passed to RSpec."
+      opts.separator ''
+      opts.separator 'All other options are passed to RSpec.'
     end
 
     # Split AI-specific options from RSpec options

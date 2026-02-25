@@ -10,12 +10,12 @@ module RSpec
     # Outputs compact NDJSON with references to detailed logs
     class Formatter
       RSpec::Core::Formatters.register self,
-        :start,
-        :example_started,
-        :example_passed,
-        :example_failed,
-        :example_pending,
-        :dump_summary
+                                       :start,
+                                       :example_started,
+                                       :example_passed,
+                                       :example_failed,
+                                       :example_pending,
+                                       :dump_summary
 
       def initialize(output, log_dir: nil)
         @output = output
@@ -195,7 +195,7 @@ module RSpec
       def minimal_location(example)
         # Minimal format: no ./ prefix, no end line, just file:start_line
         meta = example.metadata
-        file = meta[:file_path].to_s.sub(/^\.\//, '')
+        file = meta[:file_path].to_s.sub(%r{^\./}, '')
         line = meta[:line_number]
         "#{file}:#{line}"
       end
@@ -205,9 +205,9 @@ module RSpec
 
         FileUtils.mkdir_p(@log_dir)
         # Clean old logs if needed
-        if ENV['RSPEC_AI_CLEAN'] == '1'
-          FileUtils.rm_rf(Dir.glob(File.join(@log_dir, '*.log')))
-        end
+        return unless ENV['RSPEC_AI_CLEAN'] == '1'
+
+        FileUtils.rm_rf(Dir.glob(File.join(@log_dir, '*.log')))
       end
 
       def test_location(example)
@@ -345,43 +345,41 @@ module RSpec
         log_path = File.join(@log_dir, filename)
 
         File.open(log_path, 'w') do |f|
-          f.puts("=" * 80)
+          f.puts('=' * 80)
           f.puts("TEST: #{short_name(example)}")
           f.puts("LOCATION: #{file}:#{line}")
-          f.puts("STATUS: FAIL")
+          f.puts('STATUS: FAIL')
           f.puts("TIME: #{execution_time_ms(example)}ms")
-          f.puts("=" * 80)
+          f.puts('=' * 80)
           f.puts
 
           exception = notification.exception
           if exception
             f.puts("ERROR: #{error_class(exception)}")
-            f.puts("MESSAGE:")
+            f.puts('MESSAGE:')
             f.puts(error_message(exception))
             f.puts
 
             if exception.respond_to?(:expected) && exception.respond_to?(:actual)
-              f.puts("EXPECTED:")
+              f.puts('EXPECTED:')
               f.puts(inspect_value(exception.expected))
               f.puts
-              f.puts("ACTUAL:")
+              f.puts('ACTUAL:')
               f.puts(inspect_value(exception.actual))
               f.puts
             end
 
-            f.puts("BACKTRACE:")
+            f.puts('BACKTRACE:')
             exception.backtrace&.first(20)&.each { |l| f.puts(l) }
           end
 
           f.puts
-          f.puts("=" * 80)
-          f.puts("FULL OUTPUT:")
-          f.puts("=" * 80)
+          f.puts('=' * 80)
+          f.puts('FULL OUTPUT:')
+          f.puts('=' * 80)
 
           # Capture any output from the test
-          if notification.respond_to?(:formatted_backtrace)
-            f.puts(notification.formatted_backtrace.join("\n"))
-          end
+          f.puts(notification.formatted_backtrace.join("\n")) if notification.respond_to?(:formatted_backtrace)
         end
 
         @test_index << {
@@ -449,12 +447,14 @@ module RSpec
 end
 
 # Register with RSpec
-RSpec::Core::Formatters.register(
-  RSpec::AiFormatter::Formatter,
-  :start,
-  :example_started,
-  :example_passed,
-  :example_failed,
-  :example_pending,
-  :dump_summary
-) if defined?(RSpec::Core::Formatters)
+if defined?(RSpec::Core::Formatters)
+  RSpec::Core::Formatters.register(
+    RSpec::AiFormatter::Formatter,
+    :start,
+    :example_started,
+    :example_passed,
+    :example_failed,
+    :example_pending,
+    :dump_summary
+  )
+end
