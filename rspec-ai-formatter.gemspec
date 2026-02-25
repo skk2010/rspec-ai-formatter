@@ -29,6 +29,7 @@ Gem::Specification.new do |spec|
   spec.bindir = 'bin'
   spec.executables = %w[rspec-ai rspec-ai-merge]
   spec.require_paths = ['lib']
+  spec.autorequire = 'rspec_ai_formatter'
 
   spec.add_dependency 'rspec-core', '>= 3.10'
 end
