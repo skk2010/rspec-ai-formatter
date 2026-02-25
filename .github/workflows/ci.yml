@@ -21,6 +21,7 @@ jobs:
       with:
         ruby-version: ${{ matrix.ruby-version }}
         bundler-cache: true
+        cache-version: 1
 
     - name: Run RSpec tests
       run: bundle exec rspec
@@ -38,6 +39,7 @@ jobs:
       with:
         ruby-version: '3.3'
         bundler-cache: true
+        cache-version: 1
 
     - name: Run tests with coverage
       run: bundle exec rspec
