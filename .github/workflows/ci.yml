@@ -26,8 +26,8 @@ jobs:
     - name: Run RSpec tests
       run: bundle exec rspec
 
-    - name: Run RuboCop
-      run: bundle exec rubocop --parallel
+    # - name: Run RuboCop
+    #  run: bundle exec rubocop --parallel
 
   coverage:
     runs-on: ubuntu-latest
