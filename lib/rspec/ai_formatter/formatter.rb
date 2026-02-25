@@ -222,14 +222,14 @@ module RSpec
         end
 
         msg = truncate(error_message(exception), 200)
-        @output.puts("::error file=#{file},line=#{line}::#{msg}")
+        $stderr.puts("::error file=#{file},line=#{line}::#{msg}")
       end
 
       def emit_github_warning(example, reason)
         file = example.metadata[:file_path]
         line = example.metadata[:line_number]
         msg = "Skipped: #{truncate(reason || 'pending', 200)}"
-        @output.puts("::warning file=#{file},line=#{line}::#{msg}")
+        $stderr.puts("::warning file=#{file},line=#{line}::#{msg}")
       end
 
       def setup_log_directory
