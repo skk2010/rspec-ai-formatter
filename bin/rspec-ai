@@ -1,0 +1,98 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# CLI helper for rspec-ai-formatter
+# Usage: rspec-ai [rspec-options] [--ai-logs-dir DIR]
+
+require 'optparse'
+
+class RspecAiCli
+  def initialize(args)
+    @args = args
+    @log_dir = ENV['RSPEC_AI_LOGS'] || 'tmp/rspec_logs'
+    @rspec_args = []
+    @clean = false
+  end
+
+  def run
+    parse_options!
+    setup_environment
+    exec_rspec
+  end
+
+  private
+
+  def parse_options!
+    parser = OptionParser.new do |opts|
+      opts.banner = "Usage: rspec-ai [options] [rspec options]"
+      opts.separator ""
+      opts.separator "AI Formatter options:"
+
+      opts.on('--ai-logs-dir DIR', 'Directory for failure logs') do |dir|
+        @log_dir = dir
+      end
+
+      opts.on('--ai-clean', 'Clean log directory before run') do
+        @clean = true
+      end
+
+      opts.on('--ai-signatures', 'Enable error signature hashing') do
+        ENV['RSPEC_AI_SIGNATURES'] = '1'
+      end
+
+      opts.on('-h', '--help', 'Show this help') do
+        puts opts
+        puts
+        puts "Environment variables:"
+        puts "  RSPEC_AI_LOGS      - Default log directory"
+        puts "  RSPEC_AI_CLEAN     - Clean logs before run (1/0)"
+        puts "  RSPEC_AI_SIGNATURES - Enable error signatures (1/0)"
+        exit
+      end
+
+      opts.separator ""
+      opts.separator "All other options are passed to RSpec."
+    end
+
+    # Split AI-specific options from RSpec options
+    ai_args = []
+    rspec_args = []
+
+    i = 0
+    while i < @args.length
+      arg = @args[i]
+
+      if arg.start_with?('--ai-')
+        ai_args << arg
+        if ['--ai-logs-dir'].include?(arg) && i + 1 < @args.length
+          ai_args << @args[i + 1]
+          i += 1
+        end
+      else
+        rspec_args << arg
+      end
+      i += 1
+    end
+
+    parser.parse!(ai_args)
+    @rspec_args = rspec_args
+  end
+
+  def setup_environment
+    ENV['RSPEC_AI_LOGS'] = @log_dir
+    ENV['RSPEC_AI_CLEAN'] = '1' if @clean
+
+    # Ensure the formatter is loaded
+    formatter_path = File.expand_path('../lib', __dir__)
+    ENV['RUBYOPT'] = "#{ENV.fetch('RUBYOPT', '')} -I#{formatter_path}"
+  end
+
+  def exec_rspec
+    cmd = ['rspec', '--format', 'RSpec::AiFormatter::Formatter']
+    cmd += @rspec_args
+
+    exec(*cmd)
+  end
+end
+
+RspecAiCli.new(ARGV).run

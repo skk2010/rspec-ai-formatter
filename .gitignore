@@ -1,0 +1,11 @@
+.bundle/
+Gemfile.lock
+.rspec_status
+*.gem
+tmp/
+logs/
+coverage/
+.ruby-version
+.ruby-gemset
+.DS_Store
+*.log
