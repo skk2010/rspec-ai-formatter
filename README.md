@@ -135,6 +135,46 @@ rspec-ai-merge --no-summary file1.jsonl file2.jsonl
 - Combined `done` event with totals from all files
 - Deduplication summaries (if enabled)
 
+### Capybara Screenshots
+
+For system tests using Capybara, the formatter automatically captures screenshots on failure:
+
+```ruby
+# In your spec_helper.rb or rails_helper.rb
+require 'capybara/rspec'
+
+RSpec.configure do |config|
+  config.before(:each, type: :system) do
+    driven_by :selenium_chrome_headless
+  end
+end
+```
+
+When a system test fails, the screenshot path is included in the error output:
+
+```json
+{
+  "t": "test",
+  "id": "spec/system/login_spec.rb:15",
+  "n": "User logs in successfully",
+  "s": "fail",
+  "e": {
+    "type": "ExpectationNotMet",
+    "msg": "expected to find text 'Welcome'",
+    "loc": "spec/system/login_spec.rb:20",
+    "log": "tmp/rspec_logs/login_spec_15.log",
+    "screenshot": "tmp/rspec_logs/login_spec_15.png"
+  }
+}
+```
+
+The screenshot is automatically saved to the log directory alongside the failure log.
+
+**Requirements:**
+- Capybara gem must be available
+- Test type must be `:feature` or `:system`
+- Browser driver must support screenshots (Selenium, Playwright, etc.)
+
 ## Output Format
 
 ### NDJSON Stream
@@ -207,6 +247,9 @@ spec/models/user_spec.rb:42:in `block (3 levels) in <top (required)>'
 | `msg` | Truncated message (200 chars) |
 | `loc` | File:line of failure |
 | `log` | Path to full log file |
+| `screenshot` | Path to Capybara screenshot (system tests only) |
+| `sig` | MD5 signature of error (if dedup/signatures enabled) |
+| `diff` | Expected/actual diff (for expectations) |
 | `sig` | MD5 signature of error (if dedup/signatures enabled) |
 | `diff` | Expected/actual diff (for expectations) |
 
@@ -248,6 +291,7 @@ Useful when a shared setup/teardown failure cascades through many tests.
 - ✅ **Diff generation**: Smart expected/actual comparison
 - ✅ **Truncation**: Prevent token explosion on large outputs
 - ✅ **ANSI-free**: Clean text, no escape codes
+- ✅ **Screenshot capture**: Auto-capture Capybara screenshots on system test failures
 
 ## TODO
 
@@ -264,7 +308,7 @@ Useful when a shared setup/teardown failure cascades through many tests.
 ### Compatibility & Tooling
 - [ ] JUnit XML compatibility mode — Dual output for systems requiring XML
 - [x] Parallel test log merging — Clean merge of outputs from `parallel_tests` runs
-- [ ] Screenshot capture for system tests — Auto-capture Capybara screenshot path on failure
+- [x] Screenshot capture for system tests — Auto-capture Capybara screenshot path on failure
 - [ ] Custom output templates — User-defined NDJSON schema / field selection
 
 ## License
