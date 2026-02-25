@@ -233,21 +233,21 @@ RSpec.describe RSpec::AiFormatter::Formatter do
   end
 
   describe 'error deduplication' do
-    let(:exception1) do
+    let(:db_exception) do
       StandardError.new('database connection failed').tap do |e|
         e.set_backtrace(['spec/db_spec.rb:10'])
       end
     end
 
-    let(:exception2) do
+    let(:api_exception) do
       StandardError.new('database connection failed').tap do |e|
         e.set_backtrace(['spec/api_spec.rb:20'])
       end
     end
 
-    let(:example1) do
+    let(:db_example) do
       double(
-        'example1',
+        'db_example',
         metadata: { file_path: 'spec/db_spec.rb', line_number: 10, block: nil },
         description: 'connects to database',
         example_group: example_group,
@@ -255,9 +255,9 @@ RSpec.describe RSpec::AiFormatter::Formatter do
       )
     end
 
-    let(:example2) do
+    let(:api_example) do
       double(
-        'example2',
+        'api_example',
         metadata: { file_path: 'spec/api_spec.rb', line_number: 20, block: nil },
         description: 'queries database',
         example_group: example_group,
@@ -277,20 +277,20 @@ RSpec.describe RSpec::AiFormatter::Formatter do
       double('result', run_time: 0.045)
     end
 
-    let(:notification1) do
+    let(:db_notification) do
       double(
-        'notification1',
-        example: example1,
-        exception: exception1,
+        'db_notification',
+        example: db_example,
+        exception: db_exception,
         formatted_backtrace: ['spec/db_spec.rb:10']
       )
     end
 
-    let(:notification2) do
+    let(:api_notification) do
       double(
-        'notification2',
-        example: example2,
-        exception: exception2,
+        'api_notification',
+        example: api_example,
+        exception: api_exception,
         formatted_backtrace: ['spec/api_spec.rb:20']
       )
     end
@@ -307,10 +307,10 @@ RSpec.describe RSpec::AiFormatter::Formatter do
       formatter.start(double('start', count: 2))
 
       # First failure - full test event
-      formatter.example_failed(notification1)
+      formatter.example_failed(db_notification)
 
       # Second failure - should be dedup
-      formatter.example_failed(notification2)
+      formatter.example_failed(api_notification)
 
       output.rewind
       lines = output.read.lines
@@ -332,8 +332,8 @@ RSpec.describe RSpec::AiFormatter::Formatter do
       formatter = described_class.new(output, log_dir: log_dir)
       formatter.start(double('start', count: 2))
 
-      formatter.example_failed(notification1)
-      formatter.example_failed(notification2)
+      formatter.example_failed(db_notification)
+      formatter.example_failed(api_notification)
 
       output.rewind
       lines = output.read.lines
@@ -353,8 +353,8 @@ RSpec.describe RSpec::AiFormatter::Formatter do
       formatter = described_class.new(output, log_dir: log_dir)
       formatter.start(double('start', count: 2))
 
-      formatter.example_failed(notification1)
-      formatter.example_failed(notification2)
+      formatter.example_failed(db_notification)
+      formatter.example_failed(api_notification)
       formatter.dump_summary(double('summary', example_count: 2, failure_count: 2, pending_count: 0))
 
       output.rewind
