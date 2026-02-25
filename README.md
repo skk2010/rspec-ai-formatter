@@ -98,32 +98,6 @@ Includes: test names, timestamps, timing for every test.
 rspec --format progress --format RSpec::AiFormatter::Formatter --out rspec.jsonl
 ```
 
-### GitHub Actions
-
-The formatter auto-detects `GITHUB_ACTIONS=true` and emits workflow commands for inline PR annotations:
-
-```yaml
-- name: Run tests
-  env:
-    GITHUB_ACTIONS: true  # Usually already set by GitHub
-  run: bundle exec rspec --format RSpec::AiFormatter::Formatter
-```
-
-**Annotations appear on:**
-- Failed tests → `::error` with file/line
-- Skipped/pending tests → `::warning`
-
-**Example output:**
-```
-::error file=spec/models/user_spec.rb,line=42::expected false, got true
-::warning file=spec/api/client_spec.rb,line=15::Skipped: pending implementation
-```
-
-To disable annotations but keep NDJSON:
-```bash
-GITHUB_ACTIONS= bundle exec rspec --format RSpec::AiFormatter::Formatter
-```
-
 ### Parallel Tests
 
 When using `parallel_tests`, each process writes its own output file. Merge them with `rspec-ai-merge`:
@@ -274,12 +248,8 @@ Useful when a shared setup/teardown failure cascades through many tests.
 - ✅ **Diff generation**: Smart expected/actual comparison
 - ✅ **Truncation**: Prevent token explosion on large outputs
 - ✅ **ANSI-free**: Clean text, no escape codes
-- ✅ **GitHub Actions**: Auto-detects and emits `::error`/`::warning` annotations
 
 ## TODO
-
-### CI/CD Integration
-- [x] GitHub Actions workflow command integration — Auto-detect `GITHUB_ACTIONS` env and emit `::error` / `::warning` commands for inline PR annotations
 
 ### Error Intelligence
 - [x] Error pattern deduplication across test runs — Group failures by signature hash, show "and 4 more like this"
