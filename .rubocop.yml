@@ -20,6 +20,8 @@ RSpec/MultipleExpectations:
 RSpec/MultipleMemoizedHelpers:
   Max: 15
 Metrics/PerceivedComplexity:
-  Max: 15 
+  Max: 15
 Metrics/CyclomaticComplexity:
   Max: 15
+Metrics/AbcSize:
+  Max: 50
