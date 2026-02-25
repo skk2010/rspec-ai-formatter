@@ -26,7 +26,7 @@ module RSpec
         @pending_count = 0
         @passed_count = 0
         @test_index = []
-        @github_actions = ENV['GITHUB_ACTIONS'] == 'true'
+        @github_actions = ENV['GITHUB_ACTIONS'] == 'true' && output.respond_to?(:tty?) && output.tty?
         @deduplicate = ENV['RSPEC_AI_DEDUP'] == '1'
         @minimal = ENV['RSPEC_AI_FULL'] != '1'
         @error_signatures = {}
