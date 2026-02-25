@@ -1,0 +1,212 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Merge multiple RSpec AI formatter outputs from parallel test runs
+# Usage: rspec-ai-merge [options] file1.jsonl file2.jsonl ... > combined.jsonl
+
+require 'json'
+require 'optparse'
+
+class RspecAiMerger
+  def initialize(args)
+    @files = []
+    @output = $stdout
+    @dedup = false
+    @sort = true
+    @summary = true
+    parse_options!(args)
+  end
+
+  def run
+    if @files.empty?
+      puts "No input files specified. Use --help for usage."
+      exit 1
+    end
+
+    missing = @files.reject { |f| File.exist?(f) }
+    unless missing.empty?
+      warn "Missing files: #{missing.join(', ')}"
+      exit 1
+    end
+
+    events = load_events
+    events = sort_events(events) if @sort
+    events = deduplicate(events) if @dedup
+
+    write_output(events)
+    write_summary(events) if @summary
+  end
+
+  private
+
+  def parse_options!(args)
+    parser = OptionParser.new do |opts|
+      opts.banner = "Usage: rspec-ai-merge [options] file1.jsonl file2.jsonl ..."
+      opts.separator ""
+      opts.separator "Merge multiple RSpec AI formatter outputs from parallel test runs"
+      opts.separator ""
+      opts.separator "Options:"
+
+      opts.on('-o', '--output FILE', 'Output file (default: stdout)') do |f|
+        @output = File.open(f, 'w')
+      end
+
+      opts.on('-d', '--dedup', 'Deduplicate identical errors across files') do
+        @dedup = true
+      end
+
+      opts.on('--no-sort', 'Do not sort by timestamp') do
+        @sort = false
+      end
+
+      opts.on('--no-summary', 'Skip summary event') do
+        @summary = false
+      end
+
+      opts.on('-h', '--help', 'Show this help') do
+        puts opts
+        exit
+      end
+    end
+
+    parser.parse!(args)
+    @files = args
+  end
+
+  def load_events
+    events = []
+
+    @files.each do |file|
+      File.readlines(file).each do |line|
+        line = line.strip
+        next if line.empty?
+
+        begin
+          event = JSON.parse(line)
+          events << event
+        rescue JSON::ParserError
+          # Skip malformed lines
+          warn "Skipping malformed line in #{file}: #{line[0..50]}..."
+        end
+      end
+    end
+
+    events
+  end
+
+  def sort_events(events)
+    # Sort by timestamp if available, otherwise keep original order
+    events.sort_by do |e|
+      ts = e['ts']
+      if ts
+        # Parse ISO8601 timestamp
+        Time.parse(ts).to_f
+      else
+        0
+      end
+    rescue StandardError
+      0
+    end
+  end
+
+  def deduplicate(events)
+    signatures = {}
+    result = []
+
+    events.each do |event|
+      case event['t']
+      when 'test'
+        if event['s'] == 'fail' && event.dig('e', 'sig')
+          sig = event['e']['sig']
+          if signatures.key?(sig)
+            # Convert to dedup event
+            signatures[sig][:count] += 1
+            signatures[sig][:examples] << event['id']
+            result << {
+              't' => 'dedup',
+              'sig' => sig,
+              'id' => event['id'],
+              'n' => event['n'],
+              'first' => signatures[sig][:first],
+              'ts' => event['ts']
+            }
+          else
+            signatures[sig] = {
+              count: 1,
+              first: event['id'],
+              examples: [event['id']],
+              type: event.dig('e', 'type'),
+              msg: event.dig('e', 'msg')
+            }
+            result << event
+          end
+        else
+          result << event
+        end
+      when 'dedup'
+        # Already a dedup event, track it
+        sig = event['sig']
+        if signatures.key?(sig)
+          signatures[sig][:count] += 1
+          signatures[sig][:examples] << event['id']
+        end
+        result << event
+      when 'dedup_summary'
+        # Skip original dedup_summary, we'll generate a new one
+        next
+      else
+        result << event
+      end
+    end
+
+    # Add merged dedup summaries
+    signatures.each do |sig, data|
+      next if data[:count] <= 1
+
+      result << {
+        't' => 'dedup_summary',
+        'sig' => sig,
+        'type' => data[:type],
+        'msg' => data[:msg],
+        'count' => data[:count],
+        'first' => data[:first],
+        'examples' => data[:examples]
+      }
+    end
+
+    result
+  end
+
+  def write_output(events)
+    events.each do |event|
+      @output.puts(event.to_json)
+    end
+  end
+
+  def write_summary(events)
+    # Calculate totals from all 'done' events
+    dones = events.select { |e| e['t'] == 'done' }
+    
+    if dones.any?
+      total_passed = dones.sum { |d| d['passed'] || 0 }
+      total_failed = dones.sum { |d| d['failed'] || 0 }
+      total_skipped = dones.sum { |d| d['skipped'] || 0 }
+      total_tests = dones.sum { |d| d['total'] || 0 }
+      total_time = dones.sum { |d| d['time'] || 0 }
+
+      # Remove original done events and add merged one
+      @output.puts({
+        't' => 'done',
+        'passed' => total_passed,
+        'failed' => total_failed,
+        'skipped' => total_skipped,
+        'total' => total_tests,
+        'time' => total_time,
+        'merged_from' => @files.length,
+        'ts' => Time.now.utc.iso8601(3)
+      }.to_json)
+    end
+  end
+end
+
+RspecAiMerger.new(ARGV).run
