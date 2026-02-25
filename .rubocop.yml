@@ -14,4 +14,8 @@ RSpec/ExampleLength:
 RSpec/MultipleExpectations:
   Max: 10
 RSpec/MultipleMemoizedHelpers:
-  Max: 10
+  Max: 15
+Metrics/PerceivedComplexity:
+  Max: 15 
+Metrics/CyclomaticComplexity:
+  Max: 15

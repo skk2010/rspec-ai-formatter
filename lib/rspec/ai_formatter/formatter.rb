@@ -201,7 +201,7 @@ module RSpec
       end
 
       def setup_log_directory
-        return if @log_dir == '/dev/null' || @log_dir.nil?
+        return if @log_dir == File::NULL || @log_dir.nil?
 
         FileUtils.mkdir_p(@log_dir)
         # Clean old logs if needed
@@ -282,7 +282,7 @@ module RSpec
           loc: failure_location(example, exception)
         }
 
-        details[:log] = log_path if log_path && @log_dir != '/dev/null'
+        details[:log] = log_path if log_path && @log_dir != File::NULL
         details[:sig] = sig if sig
 
         # Add diff for expectation failures
@@ -337,7 +337,7 @@ module RSpec
       end
 
       def write_failure_log(example, notification)
-        return nil if @log_dir == '/dev/null'
+        return nil if @log_dir == File::NULL
 
         file = example.metadata[:file_path]
         line = example.metadata[:line_number]
@@ -393,7 +393,7 @@ module RSpec
       end
 
       def write_index_file
-        return if @log_dir == '/dev/null' || @test_index.empty?
+        return if @log_dir == File::NULL || @test_index.empty?
 
         index_path = File.join(@log_dir, 'index.json')
         File.write(index_path, JSON.pretty_generate(@test_index))
