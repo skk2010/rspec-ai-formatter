@@ -1,3 +1,3 @@
 # frozen_string_literal: true
 
-require_relative 'ai_formatter'
+require_relative 'rspec/ai_formatter'
