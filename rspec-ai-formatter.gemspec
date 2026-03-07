@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |spec|
   spec.name = 'rspec-ai-formatter'
-  spec.version = '0.2.0'
+  spec.version = '0.3.0'
   spec.authors = ['SK']
   spec.email = ['konstantin.suhov@gmail.com']
 
