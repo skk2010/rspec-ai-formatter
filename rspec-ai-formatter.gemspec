@@ -13,7 +13,7 @@ Gem::Specification.new do |spec|
     Supports log splitting, error deduplication, and context-efficient reporting.
   DESC
 
-  spec.homepage = 'https://github.com/sciencejet/rspec-ai-formatter'
+  spec.homepage = 'https://github.com/skk2010/rspec-ai-formatter'
   spec.license = 'MIT'
   spec.required_ruby_version = '>= 3.0.0'
 
